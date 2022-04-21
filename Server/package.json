@@ -1,0 +1,40 @@
+{
+  "name": "side-project",
+  "version": "1.0.0",
+  "description": "The WebApp implimented using NodeJS & ReactJS.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SafvanKhWork/InnerCircle.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SafvanKhWork/InnerCircle/issues"
+  },
+  "homepage": "https://github.com/SafvanKhWork/InnerCircle#readme",
+  "dependencies": {
+    "array-of-objects-functions": "^0.2.1",
+    "axios": "^0.26.1",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.29.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.16.4",
+    "gravatar": "^1.8.2",
+    "jsonwebtoken": "^8.4.0",
+    "lodash": "^4.17.21",
+    "mongodb": "^3.1.10",
+    "mongoose": "^5.3.16",
+    "multer": "^1.4.4",
+    "nodemailer": "^6.7.2",
+    "validator": "^10.9.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.4"
+  }
+}
