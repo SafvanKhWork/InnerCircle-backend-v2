@@ -4,6 +4,7 @@ const User = require("../models/user");
 const auth = require("../middleware/auth");
 const router = new express.Router();
 const nodemailer = require("nodemailer");
+var randomstring = require("randomstring");
 const _ = require("lodash");
 require("dotenv").config();
 const multer = require("multer");
@@ -29,16 +30,13 @@ const upload = multer({
   fileFilter,
 });
 
-let code = undefined;
-let un_email = null;
-let ver_email = null;
-let timer;
-
 //Register new user (Test: Passed )
 router.post("/user/register", async (req, res) => {
   try {
     let data = req.body;
 
+    const password = randomstring.generate(12);
+    const username = data.name.split(" ").join("") + String(Date.now());
     let avatar =
       "https://" +
       gravatar
@@ -48,24 +46,10 @@ router.post("/user/register", async (req, res) => {
           d: "mm",
         })
         .slice(2);
-
-    data = { ...data, avatar };
+    data = { ...data, avatar, password, username };
     const user = new User(data);
     await user.save();
-    const token = await user.generateAuthToken();
-    res.status(201).send({ user, token });
-  } catch (e) {
-    console.log(e.message);
-    res.status(401).send(e);
-  }
-});
 
-//send code on Email (Test: Passed )
-router.post("/verify/email", auth, async (req, res) => {
-  try {
-    const email = req.user.email;
-
-    const otp = Math.floor(Math.random() * 1000000);
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -73,71 +57,44 @@ router.post("/verify/email", auth, async (req, res) => {
         pass: process.env.PROJECT_EMAIL_PASSWD,
       },
     });
+    let mail = {
+      from: process.env.PROJECT_EMAIL_ADDRESS,
+      to: data.email,
+      subject: "Welcome to InnerCircle.",
+      text: `Your InnerCircle Account was created successfully with temporary username and password, please change these once you login. You can login using following credentials: [email: ${data.email}, password: ${password}].`,
+    };
+    await transporter.sendMail(mail, (error, data) => {});
+    res.status(201).send(user);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
 
+//Forgot Password on Email (Test: Passed )
+router.post("/verify/email", async (req, res) => {
+  try {
+    const email = req.body.email;
+    const user = await User.findOne({ email });
+    const tempPasswd = randomstring.generate(12);
+    user["password"] = tempPasswd;
+    await user.save();
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.PROJECT_EMAIL_ADDRESS,
+        pass: process.env.PROJECT_EMAIL_PASSWD,
+      },
+    });
     let mail = {
       from: process.env.PROJECT_EMAIL_ADDRESS,
       to: email,
-      subject: "Email Verification Code",
-      text: `Your InnerCircle verification code is, ${otp}. This code is only valid for 5 minutes`,
+      subject: "Verification Email for your InnerCircle Account.",
+      text: `Your Temporary InnerCircle Password is, ${tempPasswd}. please change this password once you login.`,
     };
-    await transporter.sendMail(mail, (error, data) => {
-      if (data) {
-        code = String(otp);
-        un_email = email;
-      }
-      if (error) {
-        throw new Error(error);
-      }
-    });
-    // timer = setTimeout(() => {
-    //   code = undefined;
-    // }, 5 * 60 * 100);
+    await transporter.sendMail(mail, (error, data) => {});
     await res.send(mail);
   } catch (e) {
     res.status(500).send(e);
-  }
-});
-
-//match the code (Test: Passed )
-router.post("/verify/code", auth, async (req, res) => {
-  try {
-    if (un_email === req.user.email) {
-      console.log(code);
-      if (code === req.body.otp) {
-        ver_email = un_email;
-        code = undefined;
-        // if (timer) {
-        //   clearTimeout(timer);
-        // }
-      } else {
-        throw new Error("Wrong OTP");
-      }
-      if (code !== req.body.otp) {
-      }
-    } else {
-      throw new Error(" User Mismatch ");
-    }
-    await res.status(200).send(ver_email);
-  } catch (e) {
-    res.status(500).send(e.message);
-  }
-});
-
-//Update Password (Test: Passed )
-router.patch("/user/passwd", auth, async (req, res) => {
-  try {
-    // console.log(req.body.password);
-    const new_passwd = req.body.password;
-    const user = ver_email
-      ? await User.findOne({ email: ver_email })
-      : undefined;
-
-    user["password"] = req.body["password"];
-
-    await user.save();
-    res.status(200).send(user);
-  } catch (e) {
-    res.status(400).send(e.message);
   }
 });
 

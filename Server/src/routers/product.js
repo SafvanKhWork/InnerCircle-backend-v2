@@ -201,8 +201,9 @@ router.get("/products/catagory/:catagory", async (req, res) => {
 router.get("/products/owner/:user", async (req, res) => {
   try {
     const _id = req.params.user;
-    const products = await Product.find({});
-    const prods = products.filter((el) => String(el.owner) === String(_id));
+    const products = await Product.find({ owner: _id }).populate("owner");
+    const prods = products.sort((a, b) => b.createdAt - a.createdAt);
+
     res.send(prods);
   } catch (e) {
     res.status(500).send();

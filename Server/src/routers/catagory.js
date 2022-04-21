@@ -4,7 +4,7 @@ const auth = require("../middleware/auth");
 const router = new express.Router();
 
 //(Test: Passed )
-router.post("/catagory/new", async (req, res) => {
+router.post("/catagory/new", auth, async (req, res) => {
   const catagory = new Catagory(req.body);
 
   try {
@@ -21,6 +21,16 @@ router.post("/catagory/new", async (req, res) => {
 router.get("/catagories", async (req, res) => {
   try {
     const catagories = await Catagory.find({});
+    res.send(catagories);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+router.delete("/catagory/:catagory", auth, async (req, res) => {
+  try {
+    const name = req.params.catagory;
+    const catagories = await Catagory.findOneAndDelete({ name });
     res.send(catagories);
   } catch (e) {
     res.status(400).send(e);
