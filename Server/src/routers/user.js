@@ -74,7 +74,9 @@ router.post("/user/register", async (req, res) => {
 router.post("/verify/email", async (req, res) => {
   try {
     const email = req.body.email;
+
     const user = await User.findOne({ email });
+
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
@@ -94,6 +96,7 @@ router.post("/verify/email", async (req, res) => {
     await transporter.sendMail(mail, (error, data) => {});
     await res.send(mail);
   } catch (e) {
+    console.log(e.message);
     res.status(500).send(e);
   }
 });
@@ -177,13 +180,13 @@ router.get("/user/history", auth, async (req, res) => {
 //Update User Profile (Test: Passed )
 router.patch("/users/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["name", "email", "avatar", "password"];
+  const allowedUpdates = ["name", "username", "avatar", "password"];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
 
   if (!isValidOperation) {
-    return res.status(400).send({ error: "Invalid updates!" });
+    return res.status(403).send({ error: "Invalid updates!" });
   }
 
   try {
@@ -191,6 +194,7 @@ router.patch("/users/me", auth, async (req, res) => {
     await req.user.save();
     res.send(req.user);
   } catch (e) {
+    console.log(e.message);
     res.status(400).send(e);
   }
 });
@@ -276,7 +280,7 @@ router.get("/user/id/:id", auth, async (req, res) => {
     if (!user) {
       return res.status(404).send();
     }
-    res.send(user);
+    res.status(200).send(user);
   } catch (e) {
     res.status(500).send();
   }
@@ -325,10 +329,8 @@ router.patch("/accept-friend-request/:uname", auth, async (req, res) => {
     if (atRequest !== -1 && atSent !== -1) {
       req.user.friendRequest.splice(atRequest, 1); //User
       user.sentFriendRequest.splice(atSent, 1); //Sender
-
       user.circle.push(req.user.username); // add in senders circle
       user.circle = [...new Set(user.circle)]; //remove repitations at sender
-
       req.user.circle.push(user.username); // add in user circle
       req.user.circle = [...new Set(req.user.circle)]; //remove repitations at user
       req.user.save();

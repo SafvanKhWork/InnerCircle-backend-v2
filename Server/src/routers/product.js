@@ -2,6 +2,7 @@ const express = require("express");
 const { removeAllMatching } = require("array-of-objects-functions");
 const router = new express.Router();
 const { cloudinary } = require("../utils/cloudinary");
+// const cloudinary = require("cloudinary");
 const path = require("path");
 const { ObjectID } = require("mongodb");
 const multer = require("multer");
@@ -62,18 +63,28 @@ router.post(
 );
 
 //upload image on cloudanary
-// router.post("/product-image", auth, async (req, res) => {
-//   try {
-//     const fileStr = req.body.data;
-//     const uploadedResponse = await cloudinary.uploader.upload(fileStr, {
-//       upload_preset: "ml_default",
-//     });
-//     res.status(200).send(fileStr);
-//   } catch (error) {
-//     console.log("Error Uploading Image on Cloudinary", error.message);
-//     res.status(400).send(error.message);
-//   }
-// });
+router.post("/image", auth, upload.single("avatar"), async (req, res) => {
+  try {
+    const uploadResult = await cloudinary.v2.uploader.upload(
+      req.file.path,
+      {
+        folder: "userimages",
+        public_id: req.file.filename,
+        crop: "fit",
+        allowedFormats: ["jpg", "jpeg", "png"],
+      },
+      (e) => {
+        if (e) {
+          throw new Error(e.message);
+        }
+      }
+    );
+    res.status(200).send(uploadResult);
+  } catch (error) {
+    console.log("Error Uploading Image on Cloudinary", error);
+    res.status(400).send(error.message);
+  }
+});
 
 //add new product (Test: Passed)
 
@@ -203,10 +214,23 @@ router.get("/products/owner/:user", async (req, res) => {
     const _id = req.params.user;
     const products = await Product.find({ owner: _id }).populate("owner");
     const prods = products.sort((a, b) => b.createdAt - a.createdAt);
-
     res.send(prods);
   } catch (e) {
+    console.log(e.message);
     res.status(500).send();
+  }
+});
+
+//Offers
+router.get("/offers/:user", async (req, res) => {
+  try {
+    const _id = req.params.user;
+    const products = await Product.find({ "bids.user": _id });
+    const prods = products.sort((a, b) => b.createdAt - a.createdAt);
+    res.send(prods);
+  } catch (e) {
+    console.log(e.message);
+    res.status(500).send(e.message);
   }
 });
 
