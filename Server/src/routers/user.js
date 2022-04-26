@@ -8,6 +8,7 @@ var randomstring = require("randomstring");
 const _ = require("lodash");
 require("dotenv").config();
 const multer = require("multer");
+const { cloudinary } = require("../utils/cloudinary");
 const uploadDestination = "../uploads/";
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -264,6 +265,14 @@ router.delete("/users/me", auth, async (req, res) => {
         user.save();
       }
     });
+    const avatarId = req.user.avatar
+      .split("/")
+      .slice(-2)
+      .join("/")
+      .split(".")
+      .slice(-4, -1)
+      .join(".");
+    await cloudinary.v2.uploader.destroy(avatarId);
     await req.user.remove();
     res.send(req.user);
   } catch (e) {
