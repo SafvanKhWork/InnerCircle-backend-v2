@@ -109,13 +109,12 @@ router.post("/image", auth, upload.single("avatar"), async (req, res) => {
 //   }
 // });
 
-router.post("/product/new", auth, upload.single("image"), async (req, res) => {
+router.post("/product/new", auth, async (req, res) => {
   try {
     const product = new Product({
       ...req.body,
       product_name: `at${Date.now()}by${req.user.username}`.split(" ").join(""),
       owner: req.user._id,
-      images: req.file?.path ? [req.file?.path.slice(2)] : [],
     });
 
     Catagory.exists({ name: req.body.name }, function (e) {
@@ -328,7 +327,7 @@ router.get("/product/:product", async (req, res) => {
 //Update the product with given id (Test: Passed)
 router.patch("/products/:id", auth, async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowedUpdates = ["description", "name"];
+  const allowedUpdates = ["description", "name", "images", "price"];
   const isValidOperation = updates.every((update) =>
     allowedUpdates.includes(update)
   );
