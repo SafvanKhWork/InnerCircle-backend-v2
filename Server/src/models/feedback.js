@@ -5,6 +5,10 @@ const feedbackSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  reviewed: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Feedback = mongoose.model("Feedback", feedbackSchema);

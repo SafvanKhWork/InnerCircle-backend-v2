@@ -19,7 +19,10 @@ router.post("/feedback/new", async (req, res) => {
 });
 
 //(Test: Passed )
-router.get("/feedbacks", async (req, res) => {
+router.get("/feedbacks", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(401).send({});
+  }
   try {
     const feedbacks = await Feedback.find({});
     res.send(feedbacks);
@@ -29,6 +32,9 @@ router.get("/feedbacks", async (req, res) => {
 });
 
 router.delete("/feedback/:id", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(404).send({});
+  }
   try {
     const _id = req.params.id;
     const feedbacks = await Feedback.findByIdAndDelete(_id);

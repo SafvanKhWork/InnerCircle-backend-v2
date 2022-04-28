@@ -65,9 +65,84 @@ router.post("/user/register", async (req, res) => {
       text: `Your InnerCircle Account was created successfully with temporary username and password, please change these once you login. You can login using following credentials: [email: ${data.email}, password: ${password}].`,
     };
     await transporter.sendMail(mail, (error, data) => {});
+    console.log({ password });
     res.status(201).send(user);
   } catch (e) {
+    console.log({ error: e.message });
     res.status(400).send(e);
+  }
+});
+
+//Admin Edit
+router.patch("/admin/users/:id", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(404).send({});
+  }
+  const itemuser = User.findById(req.param);
+  const updates = Object.keys(req.body);
+  try {
+    updates.forEach((update) => (itemuser[update] = req.body[update]));
+    await itemuser.save();
+    res.send(itemuser);
+  } catch (e) {
+    console.log(e.message);
+    res.status(400).send(e);
+  }
+});
+//Admin Delete
+router.delete("/admin/users/:id", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(404).send({});
+  }
+  const itemuser = User.findById(req.param);
+  try {
+    //Remove from Circle
+    itemuser.circle.forEach(async (username) => {
+      const user = await User.findOne({ username });
+      const present = user.circle.findIndex(
+        (friend) => friend == itemuser.username
+      );
+      if (present !== -1) {
+        user.circle.splice(present, 1);
+        user.save();
+      }
+    });
+
+    //Remove from friendRequest
+    itemuser.friendRequest.forEach(async (username) => {
+      const user = await User.findOne({ username });
+      const present = user.friendRequest.findIndex(
+        (friend) => friend === itemuser.username
+      );
+      if (present !== -1) {
+        user.friendRequest.splice(present, 1);
+        user.save();
+      }
+    });
+
+    //Remove from sentFriendRequest
+    itemuser.sentFriendRequest.forEach(async (username) => {
+      const user = await User.findOne({ username });
+      const present = user.sentFriendRequest.findIndex(
+        (friend) => friend == itemuser.username
+      );
+      if (present !== -1) {
+        user.sentFriendRequest.splice(present, 1);
+        user.save();
+      }
+    });
+    const avatarId = itemuser.avatar
+      .split("/")
+      .slice(-2)
+      .join("/")
+      .split(".")
+      .slice(-4, -1)
+      .join(".");
+    await cloudinary.v2.uploader.destroy(avatarId);
+    await itemuser.remove();
+    res.send(itemuser);
+  } catch (e) {
+    res.status(500).send();
   }
 });
 
@@ -95,6 +170,7 @@ router.post("/verify/email", async (req, res) => {
       text: `Your Temporary InnerCircle Password is, ${tempPasswd}. please change this password once you login.`,
     };
     await transporter.sendMail(mail, (error, data) => {});
+    console.log({ tempPasswd });
     await res.send(mail);
   } catch (e) {
     console.log(e.message);
@@ -226,10 +302,6 @@ router.delete("/unfriend/:uname", auth, async (req, res) => {
 //Delete User (Test: Passed )
 router.delete("/users/me", auth, async (req, res) => {
   try {
-    //Remove Posts
-    //Remove Bids
-    //Remove Comments
-
     //Remove from Circle
     req.user.circle.forEach(async (username) => {
       const user = await User.findOne({ username });

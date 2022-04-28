@@ -628,4 +628,32 @@ router.delete("/products/:id", auth, async (req, res) => {
   }
 });
 
+//Admin Delete
+router.delete("/admin/products/:id", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(404).send({});
+  }
+  try {
+    const product = await Product.findOneAndDelete({
+      _id: req.params.id,
+    });
+    product.images.forEach(async (image) => {
+      const avatarId = image
+        .split("/")
+        .slice(-2)
+        .join("/")
+        .split(".")
+        .slice(-4, -1)
+        .join(".");
+      await cloudinary.v2.uploader.destroy(avatarId);
+    });
+    if (!product) {
+      res.status(404).send();
+    }
+    res.send(product);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
 module.exports = router;
