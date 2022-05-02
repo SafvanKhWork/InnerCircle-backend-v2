@@ -1,6 +1,9 @@
 const express = require("express");
 const gravatar = require("gravatar");
 const User = require("../models/user");
+const Product = require("../models/product");
+const Feedback = require("../models/feedback");
+const Catagory = require("../models/catagory");
 const auth = require("../middleware/auth");
 const router = new express.Router();
 const nodemailer = require("nodemailer");
@@ -70,6 +73,35 @@ router.post("/user/register", async (req, res) => {
   } catch (e) {
     console.log({ error: e.message });
     res.status(400).send(e);
+  }
+});
+
+//DashBoard
+router.get("/admin/dash", auth, async (req, res) => {
+  try {
+    if (!req.user.admin) {
+      res.status(404).send({});
+    }
+    const users = await User.find({});
+    const products = await Product.find({});
+    const feedbacks = await Feedback.find({});
+    const catagories = await Catagory.find({});
+
+    res.status(200).send({
+      users,
+      products,
+      feedbacks,
+      catagories,
+      counts: {
+        users: users.length,
+        products: products.length,
+        feedbacks: feedbacks.length,
+        catagories: catagories.length,
+      },
+    });
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).send(error.message);
   }
 });
 

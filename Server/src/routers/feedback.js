@@ -31,13 +31,41 @@ router.get("/feedbacks", auth, async (req, res) => {
   }
 });
 
+router.get("/feedback/:id", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(401).send({});
+  }
+  try {
+    const feedbacks = await Feedback.findById(req.params.id);
+    res.send(feedbacks);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
+//Set Reviewed
+router.patch("/feedbacks/:id", auth, async (req, res) => {
+  if (!req.user.admin) {
+    res.status(401).send({});
+  }
+  try {
+    const feedbacks = await Feedback.findById(req.params.id);
+    feedbacks.reviewed = true;
+    feedbacks.save();
+    res.send(feedbacks);
+  } catch (e) {
+    res.status(400).send(e);
+  }
+});
+
 router.delete("/feedback/:id", auth, async (req, res) => {
   if (!req.user.admin) {
     res.status(404).send({});
   }
   try {
     const _id = req.params.id;
-    const feedbacks = await Feedback.findByIdAndDelete(_id);
+    const feedback = await Feedback.findByIdAndDelete(_id);
+    const feedbacks = await Feedback.find({});
     res.send(feedbacks);
   } catch (e) {
     res.status(400).send(e);
