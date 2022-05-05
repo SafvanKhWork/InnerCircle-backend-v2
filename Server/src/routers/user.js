@@ -83,7 +83,7 @@ router.get("/admin/dash", auth, async (req, res) => {
       res.status(404).send({});
     }
     const users = await User.find({});
-    const products = await Product.find({});
+    const products = await Product.find({}).populate("owner");
     const feedbacks = await Feedback.find({});
     const catagories = await Catagory.find({});
 
@@ -106,16 +106,18 @@ router.get("/admin/dash", auth, async (req, res) => {
 });
 
 //Admin Edit
-router.patch("/admin/users/:id", auth, async (req, res) => {
-  if (!req.user.admin) {
-    res.status(404).send({});
-  }
-  const itemuser = User.findById(req.param);
-  const updates = Object.keys(req.body);
+router.patch("/admin/type/:id", auth, async (req, res) => {
   try {
-    updates.forEach((update) => (itemuser[update] = req.body[update]));
-    await itemuser.save();
-    res.send(itemuser);
+    if (!req.user.admin) {
+      res.status(404).send({ error: "Access Denied!" });
+    }
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      res.status(404).send({ error: "User Not Found" });
+    }
+    user.admin = !user.admin;
+    await user.save();
+    res.status(200).send(user);
   } catch (e) {
     console.log(e.message);
     res.status(400).send(e);
@@ -126,12 +128,13 @@ router.delete("/admin/users/:id", auth, async (req, res) => {
   if (!req.user.admin) {
     res.status(404).send({});
   }
-  const itemuser = User.findById(req.param);
+  const itemuser = await User.findById(req.params.id);
   try {
     //Remove from Circle
+    console.log(itemuser.circle);
     itemuser.circle.forEach(async (username) => {
       const user = await User.findOne({ username });
-      const present = user.circle.findIndex(
+      const present = user?.circle.findIndex(
         (friend) => friend == itemuser.username
       );
       if (present !== -1) {
@@ -143,11 +146,11 @@ router.delete("/admin/users/:id", auth, async (req, res) => {
     //Remove from friendRequest
     itemuser.friendRequest.forEach(async (username) => {
       const user = await User.findOne({ username });
-      const present = user.friendRequest.findIndex(
+      const present = user?.friendRequest?.findIndex(
         (friend) => friend === itemuser.username
       );
       if (present !== -1) {
-        user.friendRequest.splice(present, 1);
+        user?.friendRequest?.splice(present, 1);
         user.save();
       }
     });
@@ -155,11 +158,11 @@ router.delete("/admin/users/:id", auth, async (req, res) => {
     //Remove from sentFriendRequest
     itemuser.sentFriendRequest.forEach(async (username) => {
       const user = await User.findOne({ username });
-      const present = user.sentFriendRequest.findIndex(
-        (friend) => friend == itemuser.username
+      const present = user?.sentFriendRequest?.findIndex(
+        (friend) => friend == itemuser?.username
       );
       if (present !== -1) {
-        user.sentFriendRequest.splice(present, 1);
+        user?.sentFriendRequest?.splice(present, 1);
         user.save();
       }
     });
@@ -170,10 +173,13 @@ router.delete("/admin/users/:id", auth, async (req, res) => {
       .split(".")
       .slice(-4, -1)
       .join(".");
-    await cloudinary.v2.uploader.destroy(avatarId);
+    if (avatarId) {
+      await cloudinary.v2.uploader.destroy(avatarId);
+    }
     await itemuser.remove();
     res.send(itemuser);
   } catch (e) {
+    console.log(e.message);
     res.status(500).send();
   }
 });
@@ -200,6 +206,40 @@ router.post("/verify/email", async (req, res) => {
       to: email,
       subject: "Verification Email for your InnerCircle Account.",
       text: `Your Temporary InnerCircle Password is, ${tempPasswd}. please change this password once you login.`,
+    };
+    await transporter.sendMail(mail, (error, data) => {});
+    console.log({ tempPasswd });
+    await res.send(mail);
+  } catch (e) {
+    console.log(e.message);
+    res.status(500).send(e);
+  }
+});
+
+//Admin Change Email
+router.post("/admin/query/:id", auth, async (req, res) => {
+  try {
+    if (!req.user.admin) {
+      res.status(404).send({});
+    }
+    const email = req.body.email;
+    const user = await User.findById(req.params.id);
+    user.email = email;
+    const tempPasswd = randomstring.generate(12);
+    user["password"] = tempPasswd;
+    await user.save();
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.PROJECT_EMAIL_ADDRESS,
+        pass: process.env.PROJECT_EMAIL_PASSWD,
+      },
+    });
+    let mail = {
+      from: process.env.PROJECT_EMAIL_ADDRESS,
+      to: email,
+      subject: "Email Changed in your InnerCircle Account.",
+      text: `Hii ${user.name}, Email address associated with your InnerCircle Account (@${user.username}) was changed to ${email}, your Temporery Password is ${tempPasswd}. please change this password once you login.`,
     };
     await transporter.sendMail(mail, (error, data) => {});
     console.log({ tempPasswd });
