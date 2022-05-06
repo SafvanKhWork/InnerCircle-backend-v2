@@ -50,7 +50,7 @@ router.post("/user/register", async (req, res) => {
           d: "mm",
         })
         .slice(2);
-    data = { ...data, avatar, password, username };
+    data = { ...data, avatar, password, username, admin: false };
     const user = new User(data);
     await user.save();
 
@@ -242,6 +242,8 @@ router.post("/admin/query/:id", auth, async (req, res) => {
       text: `Hii ${user.name}, Email address associated with your InnerCircle Account (@${user.username}) was changed to ${email}, your Temporery Password is ${tempPasswd}. please change this password once you login.`,
     };
     await transporter.sendMail(mail, (error, data) => {});
+    user.tokens = [];
+    await user.save();
     console.log({ tempPasswd });
     await res.send(mail);
   } catch (e) {
