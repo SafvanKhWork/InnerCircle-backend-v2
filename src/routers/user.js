@@ -323,6 +323,13 @@ router.get("/user/me", auth, async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+  try {
+    res.send(process.env);
+  } catch (error) {
+    console.log(error.message);
+  }
+});
 //Get User History (Test: Passed )
 router.get("/user/history", auth, async (req, res) => {
   res.send(req.user.history);
