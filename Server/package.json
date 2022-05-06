@@ -26,6 +26,7 @@
     "dotenv": "^16.0.0",
     "express": "^4.16.4",
     "gravatar": "^1.8.2",
+    "heroku": "^7.60.2",
     "jsonwebtoken": "^8.4.0",
     "lodash": "^4.17.21",
     "mongodb": "^3.1.10",
