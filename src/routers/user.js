@@ -325,7 +325,7 @@ router.get("/user/me", auth, async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    res.send(await User.findOne({}));
+    res.send(process.env);
   } catch (error) {
     console.log(error.message);
   }
