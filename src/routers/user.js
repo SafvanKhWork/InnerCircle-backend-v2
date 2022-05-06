@@ -325,7 +325,7 @@ router.get("/user/me", auth, async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
-    res.send(process.env);
+    res.send({ message: "Welcome to InnerCircle." });
   } catch (error) {
     console.log(error.message);
   }
