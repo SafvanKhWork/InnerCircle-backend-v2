@@ -1,5 +1,5 @@
 .replit 
-.env
+#.env
 
 Database
 node_modules
