@@ -266,6 +266,35 @@ router.post("/user/login", async (req, res) => {
   }
 });
 
+//Google login
+router.post("/user/login", async (req, res) => {
+  try {
+    let user = await User.findOne({ email: req.body.email });
+    let token;
+    if (user) {
+      token = await user.generateAuthToken();
+    } else {
+      let data = req.body;
+      const password = randomstring.generate(12);
+      const username = data.name.split(" ").join("") + String(Date.now());
+      data = {
+        email: data.email,
+        avatar: data.imageUrl,
+        name: data.name,
+        password,
+        username,
+        admin: false,
+      };
+      user = new User(data);
+      token = await user.generateAuthToken();
+    }
+
+    res.send({ user, token });
+  } catch (e) {
+    res.status(400).send(e.message);
+  }
+});
+
 //Logout User (Test: Passed )
 router.post("/user/logout", auth, async (req, res) => {
   try {
