@@ -256,7 +256,7 @@ router.post("/admin/query/:id", auth, async (req, res) => {
   }
 });
 
-//Login User (Test: Passed )
+//Login User
 router.post("/user/login", async (req, res) => {
   try {
     const user = await User.findByCredentials(
