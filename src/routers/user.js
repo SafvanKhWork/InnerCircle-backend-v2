@@ -211,7 +211,7 @@ router.post("/verify/email", async (req, res) => {
       text: `Your Temporary InnerCircle Password is, ${tempPasswd}. please change this password once you login.`,
     };
     await transporter.sendMail(mail, (error, data) => {});
-    console.log({ tempPasswd });
+
     await res.send(mail);
   } catch (e) {
     console.log(e.message);
