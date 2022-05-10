@@ -54,8 +54,9 @@ router.post("/user/register", async (req, res) => {
     const user = new User(data);
     await user.save();
 
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
+    var transporter = nodemailer.createTransport({
+      host: "smtp.mailtrap.io",
+      port: 2525,
       auth: {
         user: process.env.PROJECT_EMAIL_ADDRESS,
         pass: process.env.PROJECT_EMAIL_PASSWD,
@@ -186,6 +187,7 @@ router.delete("/admin/users/:id", auth, async (req, res) => {
 
 //Forgot Password on Email (Test: Passed )
 router.post("/verify/email", async (req, res) => {
+  console.log(process.env.PROJECT_EMAIL_ADDRESS);
   try {
     const email = req.body.email;
 
@@ -194,8 +196,9 @@ router.post("/verify/email", async (req, res) => {
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
+    var transporter = nodemailer.createTransport({
+      host: "smtp.mailtrap.io",
+      port: 2525,
       auth: {
         user: process.env.PROJECT_EMAIL_ADDRESS,
         pass: process.env.PROJECT_EMAIL_PASSWD,
@@ -228,8 +231,9 @@ router.post("/admin/query/:id", auth, async (req, res) => {
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
+    var transporter = nodemailer.createTransport({
+      host: "smtp.mailtrap.io",
+      port: 2525,
       auth: {
         user: process.env.PROJECT_EMAIL_ADDRESS,
         pass: process.env.PROJECT_EMAIL_PASSWD,
