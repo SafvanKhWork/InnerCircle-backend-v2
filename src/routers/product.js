@@ -12,7 +12,7 @@ const User = require("../models/user");
 const auth = require("../middleware/auth");
 const { Console } = require("console");
 const { findById } = require("../models/user");
-const uploadDestination = "./uploads/";
+const uploadDestination = "uploads";
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDestination);
