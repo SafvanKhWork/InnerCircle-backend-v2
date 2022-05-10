@@ -34,12 +34,20 @@ const upload = multer({
   fileFilter,
 });
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.mailtrap.io",
-  port: 2525,
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.mailtrap.io",
+//   port: 2525,
+//   auth: {
+//     user: "1f589ade6c75ab",
+//     pass: "9eac1c4858e791",
+//   },
+// });
+
+let transporter = nodemailer.createTransport({
+  service: "gmail",
   auth: {
-    user: "1f589ade6c75ab",
-    pass: "9eac1c4858e791",
+    user: process.env.PROJECT_EMAIL_ADDRESS,
+    pass: process.env.PROJECT_EMAIL_PASSWD,
   },
 });
 
@@ -191,8 +199,11 @@ router.post("/verify/email", async (req, res) => {
   try {
     const email = req.body.email;
 
-    const user = (await User.findOne({ email })) || {};
-
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(200).send({ me: 1 });
+      return;
+    }
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
@@ -204,8 +215,8 @@ router.post("/verify/email", async (req, res) => {
       text: `Your Temporary InnerCircle Password is, ${tempPasswd}. please change this password once you login.`,
     };
     await transporter.sendMail(mail, (error, data) => {});
-    console.log({ tempPasswd });
-    await res.send(mail);
+
+    await res.status(201).send({ sender: mail.from });
   } catch (e) {
     console.log(e.message);
     res.status(500).send(e);
