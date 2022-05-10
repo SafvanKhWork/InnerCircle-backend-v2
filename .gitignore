@@ -3,7 +3,7 @@
 
 Database
 node_modules
-uploads
+#uploads
 
 # dependencies
 /node_modules
