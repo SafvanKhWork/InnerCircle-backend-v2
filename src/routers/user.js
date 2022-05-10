@@ -54,9 +54,8 @@ router.post("/user/register", async (req, res) => {
     const user = new User(data);
     await user.save();
 
-    var transporter = nodemailer.createTransport({
-      host: "smtp.mailtrap.io",
-      port: 2525,
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
       auth: {
         user: process.env.PROJECT_EMAIL_ADDRESS,
         pass: process.env.PROJECT_EMAIL_PASSWD,
@@ -187,7 +186,6 @@ router.delete("/admin/users/:id", auth, async (req, res) => {
 
 //Forgot Password on Email (Test: Passed )
 router.post("/verify/email", async (req, res) => {
-  console.log(process.env.PROJECT_EMAIL_ADDRESS);
   try {
     const email = req.body.email;
 
@@ -196,9 +194,8 @@ router.post("/verify/email", async (req, res) => {
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
-    var transporter = nodemailer.createTransport({
-      host: "smtp.mailtrap.io",
-      port: 2525,
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
       auth: {
         user: process.env.PROJECT_EMAIL_ADDRESS,
         pass: process.env.PROJECT_EMAIL_PASSWD,
@@ -211,7 +208,7 @@ router.post("/verify/email", async (req, res) => {
       text: `Your Temporary InnerCircle Password is, ${tempPasswd}. please change this password once you login.`,
     };
     await transporter.sendMail(mail, (error, data) => {});
-
+    console.log({ tempPasswd });
     await res.send(mail);
   } catch (e) {
     console.log(e.message);
@@ -231,9 +228,8 @@ router.post("/admin/query/:id", auth, async (req, res) => {
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
-    var transporter = nodemailer.createTransport({
-      host: "smtp.mailtrap.io",
-      port: 2525,
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
       auth: {
         user: process.env.PROJECT_EMAIL_ADDRESS,
         pass: process.env.PROJECT_EMAIL_PASSWD,
@@ -256,7 +252,7 @@ router.post("/admin/query/:id", auth, async (req, res) => {
   }
 });
 
-//Login User
+//Login User (Test: Passed )
 router.post("/user/login", async (req, res) => {
   try {
     const user = await User.findByCredentials(
