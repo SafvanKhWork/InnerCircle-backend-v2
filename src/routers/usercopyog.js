@@ -34,15 +34,6 @@ const upload = multer({
   fileFilter,
 });
 
-var transporter = nodemailer.createTransport({
-  host: "smtp.mailtrap.io",
-  port: 2525,
-  auth: {
-    user: "1f589ade6c75ab",
-    pass: "9eac1c4858e791",
-  },
-});
-
 //Register new user (Test: Passed )
 router.post("/user/register", async (req, res) => {
   try {
@@ -63,6 +54,13 @@ router.post("/user/register", async (req, res) => {
     const user = new User(data);
     await user.save();
 
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.PROJECT_EMAIL_ADDRESS,
+        pass: process.env.PROJECT_EMAIL_PASSWD,
+      },
+    });
     let mail = {
       from: process.env.PROJECT_EMAIL_ADDRESS,
       to: data.email,
@@ -196,7 +194,13 @@ router.post("/verify/email", async (req, res) => {
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
-
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.PROJECT_EMAIL_ADDRESS,
+        pass: process.env.PROJECT_EMAIL_PASSWD,
+      },
+    });
     let mail = {
       from: process.env.PROJECT_EMAIL_ADDRESS,
       to: email,
@@ -224,7 +228,13 @@ router.post("/admin/query/:id", auth, async (req, res) => {
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
     await user.save();
-
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.PROJECT_EMAIL_ADDRESS,
+        pass: process.env.PROJECT_EMAIL_PASSWD,
+      },
+    });
     let mail = {
       from: process.env.PROJECT_EMAIL_ADDRESS,
       to: email,
@@ -250,35 +260,6 @@ router.post("/user/login", async (req, res) => {
       req.body.password
     );
     const token = await user.generateAuthToken();
-    res.send({ user, token });
-  } catch (e) {
-    res.status(400).send(e.message);
-  }
-});
-
-//Google login
-router.post("/user/login", async (req, res) => {
-  try {
-    let user = await User.findOne({ email: req.body.email });
-    let token;
-    if (user) {
-      token = await user.generateAuthToken();
-    } else {
-      let data = req.body;
-      const password = randomstring.generate(12);
-      const username = data.name.split(" ").join("") + String(Date.now());
-      data = {
-        email: data.email,
-        avatar: data.imageUrl,
-        name: data.name,
-        password,
-        username,
-        admin: false,
-      };
-      user = new User(data);
-      token = await user.generateAuthToken();
-    }
-
     res.send({ user, token });
   } catch (e) {
     res.status(400).send(e.message);
