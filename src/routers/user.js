@@ -34,7 +34,7 @@ const upload = multer({
   fileFilter,
 });
 
-var transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
   host: "smtp.mailtrap.io",
   port: 2525,
   auth: {
@@ -191,7 +191,7 @@ router.post("/verify/email", async (req, res) => {
   try {
     const email = req.body.email;
 
-    const user = await User.findOne({ email });
+    const user = (await User.findOne({ email })) || {};
 
     const tempPasswd = randomstring.generate(12);
     user["password"] = tempPasswd;
@@ -258,6 +258,7 @@ router.post("/user/login", async (req, res) => {
 
 //Google login
 router.post("/user/login", async (req, res) => {
+  console.log("Here");
   try {
     let user0 = await User.find({ email: req.body.email });
     let user = user0.length !== 0 ? user0[0] : undefined;
