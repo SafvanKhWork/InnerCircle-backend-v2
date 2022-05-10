@@ -257,8 +257,7 @@ router.post("/user/login", async (req, res) => {
 });
 
 //Google login
-router.post("/user/login", async (req, res) => {
-  console.log("Here");
+router.post("/google", async (req, res) => {
   try {
     let user0 = await User.find({ email: req.body.email });
     let user = user0.length !== 0 ? user0[0] : undefined;
