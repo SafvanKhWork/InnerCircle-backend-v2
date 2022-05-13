@@ -11,7 +11,7 @@ const Catagory = require("../models/catagory");
 const User = require("../models/user");
 const auth = require("../middleware/auth");
 const { Console } = require("console");
-const { findById } = require("../models/user");
+const { findById, findOne } = require("../models/user");
 const uploadDestination = "../uploads/";
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -237,24 +237,18 @@ router.get("/offers/:user", async (req, res) => {
 router.get("/feed", auth, async (req, res) => {
   let feed = [];
   try {
-    if (req.user.circle.length !== 0) {
-      await req.user.circle.forEach(async (friend, i) => {
-        const products = await Product.find({}).populate("owner");
-        const posts = await products.filter(
-          (product) => product.owner.username === friend
-        );
-        feed.push(...posts);
-        if (req.user.circle.length === i + 1) {
-          const postFeed = [...feed].sort((a, b) => b.createdAt - a.createdAt);
-          res.status(200).send(postFeed);
-        }
-        // else {
-        //   res.status(200).send([]);
-        // }
-      });
-    } else {
-      res.status(200).send([]);
-    }
+    [...req.user.circle, req.user.username].forEach(async (friend, i) => {
+      const friendUser = await User.findOne({ username: friend });
+      const products = await Product.find({ owner: friendUser._id }).populate(
+        "owner"
+      );
+      feed.push(...products);
+      if ([...req.user.circle, req.user.username].length === i + 1) {
+        const postFeed = [...feed].sort((a, b) => b.createdAt - a.createdAt);
+
+        res.status(200).send(postFeed);
+      }
+    });
   } catch (error) {
     res.status(400).send(error.message);
   }
