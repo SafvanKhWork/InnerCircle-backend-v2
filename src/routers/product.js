@@ -243,7 +243,7 @@ router.get("/feed", auth, async (req, res) => {
         "owner"
       );
       feed.push(...products);
-      if ([...req.user.circle, req.user.username].length === i + 1) {
+      if (friend.username === req.username) {
         const postFeed = [...feed].sort((a, b) => b.createdAt - a.createdAt);
 
         res.status(200).send(postFeed);
